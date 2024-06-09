@@ -291,9 +291,7 @@ class SignerInfo:
                 f" attributes in {type(self).__name__}: {e}"
             )
 
-    def _build_chain(
-        self, context: VerificationContext
-    ) -> Iterable[Iterable[Certificate]]:
+    def _build_chain(self, context: VerificationContext) -> Iterable[list[Certificate]]:
         """Given a context, builds a chain up to a trusted certificate. This is a
         generator function, generating all valid chains.
 
@@ -338,7 +336,7 @@ class SignerInfo:
         if first_error:
             raise first_error
 
-    def verify(self, context: VerificationContext) -> Iterable[Iterable[Certificate]]:
+    def verify(self, context: VerificationContext) -> Iterable[list[Certificate]]:
         """Verifies that this :class:`SignerInfo` verifies up to a chain with the root
         of a trusted certificate.
 
@@ -361,7 +359,7 @@ class SignerInfo:
 
     def potential_chains(
         self, context: VerificationContext
-    ) -> Iterable[Iterable[Certificate]]:
+    ) -> Iterable[list[Certificate]]:
         """Retrieves all potential chains from this SignerInfo instance.
 
         :param VerificationContext context: The context

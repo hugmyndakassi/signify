@@ -417,7 +417,7 @@ class AuthenticodeSignedData(SignedData):
         trusted_certificate_store: CertificateStore = TRUSTED_CERTIFICATE_STORE,
         verification_context_kwargs: dict[str, Any] | None = None,
         countersignature_mode: Literal["strict", "permit", "ignore"] = "strict",
-    ) -> None:
+    ) -> Iterable[list[Certificate]]:
         """Verifies the SignedData structure:
 
         * Verifies that the digest algorithms match across the structure
@@ -468,7 +468,7 @@ class AuthenticodeSignedData(SignedData):
             checked, but when it errors, it is verified as if the countersignature was
             never set. When set to 'ignore', countersignatures are never checked.
         :raises AuthenticodeVerificationError: when the verification failed
-        :return: :const:`None`
+        :return: A list of valid certificate chains for this SignedData.
         """
 
         if verification_context_kwargs is None:
@@ -563,13 +563,24 @@ class AuthenticodeSignedData(SignedData):
                         f"An error occurred while validating the countersignature: {e}"
                     )
             else:
-                # If no errors occur, we should be fine setting the timestamp to the
-                # countersignature's timestamp
-                verification_context.timestamp = (
-                    self.signer_info.countersigner.signing_time
+                # check whether the lifetime signing EKU is set. if that is the case, we
+                # can only use the timestamp for revocation checking, not for extending
+                # the lifetime of the signature. revocation checking currently does not
+                # work.
+                lifetime_signing = all(
+                    "microsoft_lifetime_signing"
+                    in chain[-1].extensions.get("extended_key_usage", [])
+                    for chain in self.signer_info.potential_chains(verification_context)
                 )
 
-        self.signer_info.verify(verification_context)
+                if not lifetime_signing:
+                    # If no errors occur, we should be fine setting the timestamp to the
+                    # countersignature's timestamp
+                    verification_context.timestamp = (
+                        self.signer_info.countersigner.signing_time
+                    )
+
+        return self.signer_info.verify(verification_context)
 
     def explain_verify(
         self, *args: Any, **kwargs: Any

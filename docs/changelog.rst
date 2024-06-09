@@ -37,6 +37,11 @@ v0.7.0 (unreleased)
 * Add support for ``SignerInfo`` versions other than v1
 * Fix bug that could cause out-of-bound reads during parsing of the PE file's
   certificate table
+* Correctly handle the lifetime-signing EKU (OID 1.3.6.1.4.1.311.10.3.13) by ignoring
+  the countersignature's timestamp during verification of the certification chain when
+  this is set on the end-entity's certificate
+* Return the certificate chain(s) in ``AuthenticodeSignedData.verify`` and
+  the used ``AuthenticodeSignedData`` and chains in ``SignedPEFile.verify``
 
 * Parse the ``SpcPeImageData`` as part of the SpcInfo. This adds the attributes
   ``image_flags`` and ``image_publisher``, although this information is never used.
